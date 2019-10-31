@@ -11,11 +11,37 @@ import random
 def task_1_a():
     print("Task 1 (a) ...")
     img = cv.imread('../images/shapes.png')
+    
+    img_gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY) # convert the image into grayscale
+    edges = cv.Canny(img_gray,30,250,apertureSize=3) # detect the edges
+    theta_res = 2 # set the resolution of theta
+    d_res = 1 # set the distance resolution
+    threshold = 50 # threshold of the accumulator
     '''
     ...
     your code ...
     ...
     '''
+    lines = cv.HoughLines(edges,d_res,theta_res,threshold)
+    for line in lines:
+        for rho,theta in line:
+            a = np.cos(theta)
+            b = np.sin(theta)
+            x0 = a*rho
+            y0 = b*rho
+            x1 = int(x0 + 1000*(-b))
+            y1 = int(y0 + 1000*(a))
+            x2 = int(x0 - 1000*(-b))
+            y2 = int(y0 - 1000*(a))
+            cv.line(img,(x1,y1),(x2,y2),(0,0,255),2)
+    
+    cv.imshow("processed",edges) 
+    cv.waitKey(0) 
+    cv.destroyAllWindows()
+    print(edges)
+    cv.imshow("processed",img) 
+    cv.waitKey(0) 
+    cv.destroyAllWindows()
 
 
 def myHoughLines(img_edges, d_resolution, theta_step_sz, threshold):
@@ -34,15 +60,47 @@ def myHoughLines(img_edges, d_resolution, theta_step_sz, threshold):
     your code ...
     ...
     '''
+	# Go through every points
+    for x in range(img_edges.shape[0]):
+        for y in range(img_edges.shape[1]):
+			# if this is a edge point
+            if img_edges[x][y] > 0:
+                for theta in range(int(180 / theta_step_sz)):
+                    d = x * np.sin(theta) + y * np.cos(theta)
+                    accumulator[int(theta), int(d)] += 1
+	# Get the detec lines
+    for i in range(accumulator.shape[0]):
+        for j in range(accumulator.shape[1]):
+			# only choose the line whuch larger than threshold
+            if accumulator[i][j] >= threshold:
+                detected_lines.append([[j, i]])
+
     return detected_lines, accumulator
 
 
 def task_1_b():
     print("Task 1 (b) ...")
     img = cv.imread('../images/shapes.png')
-    img_gray = None # convert the image into grayscale
-    edges = None # detect the edges
-    #detected_lines, accumulator = myHoughLines(edges, 1, 2, 50)
+    img_gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY) # convert the image into grayscale
+    edges = cv.Canny(img_gray,30,250,apertureSize=3) # detect the edges    
+    detected_lines, accumulator = myHoughLines(edges, 1, 2, 50)
+    
+	# put the lines we got on the img
+    for line in detected_lines:
+        for rho,theta in line:
+            a = np.cos(theta)
+            b = np.sin(theta)
+            x0 = a*rho
+            y0 = b*rho
+            x1 = int(x0 + 1000*(-b))
+            y1 = int(y0 + 1000*(a))
+            x2 = int(x0 - 1000*(-b))
+            y2 = int(y0 - 1000*(a))
+            cv.line(img,(x1,y1),(x2,y2),(0,0,255),2)
+
+    cv.imshow("processed",img) 
+    cv.waitKey(0) 
+    cv.destroyAllWindows()
     '''
     ...
     your code ...
@@ -58,16 +116,109 @@ def task_1_b():
 def task_2():
     print("Task 2 ...")
     img = cv.imread('../images/line.png')
-    img_gray = None # convert the image into grayscale
-    edges = None # detect the edges
-    theta_res = None # set the resolution of theta
-    d_res = None # set the distance resolution
-    #_, accumulator = myHoughLines(edges, d_res, theta_res, 50)
+    img_gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY) # convert the image into grayscale
+    edges = cv.Canny(img_gray,30,250,apertureSize=3) # detect the edges
+    theta_res = 1 # set the resolution of theta
+    d_res = 1 # set the distance resolution
+    threshold = 25
+    lines, accumulator = myHoughLines(edges, d_res, theta_res, threshold)
     '''
     ...
     your code ...
     ...
     '''
+    #print(accumulator)
+    for line in lines:
+        for rho,theta in line:
+            a = np.cos(theta)
+            b = np.sin(theta)
+            x0 = a*rho
+            y0 = b*rho
+            x1 = int(x0 + 1000*(-b))
+            y1 = int(y0 + 1000*(a))
+            x2 = int(x0 - 1000*(-b))
+            y2 = int(y0 - 1000*(a))
+            #cv.line(img,(x1,y1),(x2,y2),(0,0,255),2)    
+    
+    cv.imshow("processed",img) 
+    cv.waitKey(0) 
+    cv.destroyAllWindows()
+
+    data = np.array([[0,0]])
+    # filter accumulator so that only the point which hughr than threshold are white
+    for i in range(accumulator.shape[0]):
+        for j in range(accumulator.shape[1]):
+            if accumulator[i][j] > threshold:
+                accumulator[i][j] = 255
+                data = np.append(data,[[j,i]],axis=0)
+            else:
+                accumulator[i][j] = 0
+    data = np.delete(data,0,axis = 0)
+    cv.imshow("processed",accumulator) 
+    cv.waitKey(0) 
+    cv.destroyAllWindows()
+    
+
+    radius = 10
+    centroids = {}
+    # initially all the points are centroid
+    for i in range(len(data)):
+        centroids[i] = data[i]
+        
+    while True:
+        # Each iteration every windowss move once
+        new_centroids = []
+        # Go through all the certers
+        for i in centroids:
+            in_bandwidth = []
+            centroid = centroids[i]
+            # put all the point in the window together
+            for featureset in data:
+                if np.linalg.norm(featureset-centroid) < radius:
+                    in_bandwidth.append(featureset)
+            # compute the mean value in the window
+            new_centroid = np.average(in_bandwidth,axis=0)
+            # update centroid list
+            new_centroids.append(tuple(new_centroid))
+        # eliminate duplicate centroid
+        uniques = sorted(list(set(new_centroids)))
+        
+        prev_centroids = dict(centroids)
+
+        # update centroids for this iteration
+        centroids = {}
+        for i in range(len(uniques)):
+            centroids[i] = np.array(uniques[i])
+
+        optimized = True
+
+        for i in centroids:
+            # if the centroid moved, keep doing
+            if not np.array_equal(centroids[i], prev_centroids[i]):
+                optimized = False
+            if not optimized:
+                break
+                
+        if optimized:
+            break
+    print(centroids)
+
+    # draw the line 
+    for centroid in centroids.values():
+        a = np.cos(centroid[1])
+        b = np.sin(centroid[1])
+        x0 = a*centroid[0]
+        y0 = b*centroid[0]
+        x1 = int(x0 + 1000*(-b))
+        y1 = int(y0 + 1000*(a))
+        x2 = int(x0 - 1000*(-b))
+        y2 = int(y0 - 1000*(a))
+        cv.line(img,(x1,y1),(x2,y2),(0,0,255),5)    
+    
+    cv.imshow("gg",img) 
+    cv.waitKey(0) 
+    cv.destroyAllWindows()
+    
 
 
 ##############################################
@@ -155,11 +306,11 @@ def task_4_a():
 ##############################################
 
 if __name__ == "__main__":
-    task_1_a()
-    task_1_b()
-    task_2()
-    task_3_a()
-    task_3_b()
-    task_3_c()
+    #task_1_a()
+    #task_1_b()
+    #task_2()
+    #task_3_a()
+    #task_3_b()
+    #task_3_c()
     task_4_a()
 
