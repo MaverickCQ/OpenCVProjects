@@ -12,14 +12,12 @@ from matplotlib import pyplot as plt
 def task_1_a():
     print("Task 1 (a) ...")
     img = cv.imread('../images/shapes.png')
-    
-<<<<<<< HEAD
     #img_blur = cv.medianBlur(img,5)
     img_gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
     edges = cv.Canny(img_gray, 50, 150, apertureSize  = 3)
     #minLineLength = 100
     #maxLineGap = 10
-    lines = cv.HoughLines(edges,1,np.pi/180,200)
+    lines = cv.HoughLines(edges,1,np.pi/180,50)
     for rho, theta in lines[0]:
         a = np.cos(theta)
         b = np.sin(theta)
@@ -33,15 +31,7 @@ def task_1_a():
         
     circles = cv.HoughCircles(img_gray,cv.HOUGH_GRADIENT,1,20, param1=50,param2=30,
                               minRadius=0, maxRadius=0)
-    print(circles)
-    
-    '''for i in circles[0:]:
-        cv.circle(img,(i[0],i[1]),i[2],(0,255,0),2)
-        cv.circle(img,(i[0],i[1]),2,(0,0,255),3)/'''
-   # cv.imwrite("../images/blur.png", img_blur)
-    cv.imwrite("../images/gray.png", img_gray)
-    cv.imwrite("../images/canny.png", edges)
-    #cv.imwrite("../images/houghLine.png",img)
+    cv.imwrite("../images/houghLine.png",img)
 
 def myHoughLines(img_edges, d_resolution, theta_step_sz, threshold):
     """
