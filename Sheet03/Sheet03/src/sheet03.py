@@ -115,24 +115,7 @@ def task_2():
     ...
     your code ...
     ...
-    '''
-    #print(accumulator)
-    for line in lines:
-        for rho,theta in line:
-            a = np.cos(theta)
-            b = np.sin(theta)
-            x0 = a*rho
-            y0 = b*rho
-            x1 = int(x0 + 1000*(-b))
-            y1 = int(y0 + 1000*(a))
-            x2 = int(x0 - 1000*(-b))
-            y2 = int(y0 - 1000*(a))
-            #cv.line(img,(x1,y1),(x2,y2),(0,0,255),2)    
-    
-    cv.imshow("processed",img) 
-    cv.waitKey(0) 
-    cv.destroyAllWindows()
-
+    '''    
     data = np.array([[0,0]])
     # filter accumulator so that only the point which hughr than threshold are white
     for i in range(accumulator.shape[0]):
@@ -159,14 +142,14 @@ def task_2():
         new_centroids = []
         # Go through all the certers
         for i in centroids:
-            in_bandwidth = []
+            in_circle = []
             centroid = centroids[i]
             # put all the point in the window together
             for featureset in data:
                 if np.linalg.norm(featureset-centroid) < radius:
-                    in_bandwidth.append(featureset)
+                    in_circle.append(featureset)
             # compute the mean value in the window
-            new_centroid = np.average(in_bandwidth,axis=0)
+            new_centroid = np.average(in_circle,axis=0)
             # update centroid list
             new_centroids.append(tuple(new_centroid))
         # eliminate duplicate centroid
@@ -328,26 +311,70 @@ def task_3_c():
 
 def task_4_a():
     print("Task 4 (a) ...")
-    D = None  # construct the D matrix
-    W = None  # construct the W matrix
+	# construct the D matrix
+    D = np.array([
+	[2.2,0,0,0,0,0,0,0],
+	[0,2.1,0,0,0,0,0,0],
+	[0,0,2.6,0,0,0,0,0],
+	[0,0,0,3,0,0,0,0],
+	[0,0,0,0,3,0,0,0],
+	[0,0,0,0,0,3,0,0],
+	[0,0,0,0,0,0,3,0],
+	[0,0,0,0,0,0,0,2]
+	] )
+	# construct the W matrix
+    W = np.array([
+	[0,1,0.2,1,0,0,0,0],
+	[1,0,0.1,0,1,0,0,0],
+	[0.2,0.1,0,1,0,1,0.3,0],
+	[1,0,1,0,0,1,0,0],
+	[0,1,0,0,0,0,1,1],
+	[0,0,1,1,0,0,1,0],
+	[0,0,0.3,0,1,1,0,1],
+	[0,0,0,0,1,0,1,0]
+	] )
     '''
     ...
     your code ...
     ...
     '''
+    # compute D^(1/2)
+    D_rs_inv = np.sqrt(D)  
+    # Get D^(-1/2)   
+    for i in range(D_rs_inv.shape[0]):
+        for j in range(D_rs_inv.shape[1]):
+            if D_rs_inv[i][j] != 0:
+                D_rs_inv[i][j] = 1./D_rs_inv[i][j]
+    
+    # A = D^(-1/2) * (D-W) * D^(-1/2)
+    A = np.dot(D_rs_inv,np.dot(D-W,D_rs_inv))    
+    
+    # Get the eigen value, eigen vector of z
+    bool, eigenValues_z, eigenVectors_z = cv.eigen(A)
+    eigenVectors_y = np.dot(D_rs_inv, eigenVectors_z)    
+    
+    # 0 = (z1^T)(Z0) = (y1^T)D1, after print out the result, we get the vector we want    
+    print("second smallest: " + str(eigenVectors_y[6]))
+    
+    
 
-
+def task_4_b():
+    print("c1: ACDF")
+    print("C2: BEGH")
+    cost = ((1+0.1+0.3+1)/(2.2+2.6+3+3)) + ((1+0.1+0.3+1)/(2.1+3+3.3+2))
+    print("cost: "+ str(cost))
 ##############################################
 ##############################################
 ##############################################
 
 if __name__ == "__main__":
-    task_1_a()
-   #task_1_b()
-   #task_2()
-    task_3_a()
-    task_3_b()
-    task_3_c()
-    task_4_a()
+    #task_1_a()
+	#task_1_b()
+	task_2()
+    #task_3_a()
+    #task_3_b()
+    #task_3_c()
+    #task_4_a()
+    #task_4_b()
 
 
