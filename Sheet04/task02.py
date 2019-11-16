@@ -47,11 +47,37 @@ def get_contour(phi):
 # your implementation here
 
 # ------------------------
+    
+def div(x,y):
+    # print (x.shape)
+    #print (y.shape)
+    
+    nx = np.shape(x)[0]
+    n = 1        
+    phix = (x[np.hstack((np.arange(1,nx),[nx-1])),:] - x[np.hstack(([0],np.arange(0,nx-1))),:])/2.
+    phix[0,:] = + x[1,:]/2. + x[0,:]           
+    phix[1,:] = + x[1,:]/2. - x[0,:]
+    phix[nx-1,:] = - x[nx-1,:]-x[nx-2,:]/2.
+    phix[nx-2,:] = + x[nx-1,:]-x[nx-3,:]/2.
+    ny = np.shape(y)[1]
+    phiy = (y[:,np.hstack((np.arange(1,ny),[ny-1]))] - y[:,np.hstack(([0],np.arange(0,ny-1)))])/2.
+    phiy[:,0] = + y[:,1]/2. + y[:,0]
+    phiy[:,1] = + y[:,2]/2. - y[:,0]
+    phiy[:,ny-1] = - y[:,ny-1]-y[:,ny-2]/2.
+    phiy[:,ny-2] = + y[:,ny-1]-y[:,ny-3]/2.
+    '''
+    nx = np.shape(x)[0]
+    phix = (x[np.hstack((np.arange(1,nx),[0])),:]) - (x[np.hstack(([nx-1],np.arange(0,nx-1))),:])
+    ny = np.shape(y)[1]
+    phiy = (y[:,np.hstack((np.arange(1,ny),[0]))]) - (y[:,np.hstack(([ny-1],np.arange(0,ny-1)))])
+    '''
+    return (phix+phiy)
+    
 
 
 if __name__ == '__main__':
 
-    n_steps = 20000
+    n_steps = 200
     plot_every_n_step = 100
 
     Im, phi = load_data()
@@ -63,15 +89,50 @@ if __name__ == '__main__':
     # ------------------------
     # your implementation here
 
-    # ------------------------
-
+    # ------------------------    
+   # print(phi)
+    gradient = np.gradient(Im, 2)
+    #print(gradient)
+    distance = np.sqrt(np.sum(np.power(gradient, 2), 2))
+    eps = np.finfo(float).eps
+    weight = 1./(distance+1)    
+   # print(weight)
+    n = 200
+    
+   # plt.figure(figsize=(10,5))
+   # ax2.imshow(w)
+   # ax2.set_title(r'$\phi$', fontsize=22)
+   # plt.show()\
+   
+    gWeight = np.gradient(weight, 2)
+    #print (gWeight.shape)
+    '''
+    grad = np.gradient(phi, 2)
+    #print (grad)
+    distance = np.sqrt(np.sum(np.power(gradient, 2), 2))
+    #print (distance.shape)
+    g = grad/np.repeat(distance[:,:,np.newaxis], 1, 2)
+    g = np.array(g)
+    print(g.shape)
+    K = distance*div(g[:,:,0], g[:,:,1])
+    phi = phi + plot_every_n_step*K
+    '''
     for t in range(n_steps):
-
         # ------------------------
         # your implementation here
 
-        # ------------------------
-
+        # ------------------------        
+        grad = np.gradient(phi, 2)
+        grad = np.array(grad)
+        #print (grad)
+        distance = np.sqrt(np.sum(grad**2, 2))
+        distance = np.array(distance)
+        #print (distance.shape)
+        g = grad/np.repeat(distance[:,:,np.newaxis], 1, 2)
+        g = np.array(g)        
+        #print(g.shape)
+        deltaPhi = distance*div(g[:,:,0], g[:,:,1])
+        phi =  plot_every_n_step* deltaPhi
         if t % plot_every_n_step == 0:
             ax1.clear()
             ax1.imshow(Im, cmap='gray')
@@ -84,6 +145,6 @@ if __name__ == '__main__':
             ax2.clear()
             ax2.imshow(phi)
             ax2.set_title(r'$\phi$', fontsize=22)
-            plt.pause(0.01)
+           # plt.pause(0.01)
 
     plt.show()
