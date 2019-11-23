@@ -4,29 +4,108 @@ import maxflow
 
 def question_3(I,rho=0.7,pairwise_cost_same=0.005,pairwise_cost_diff=0.2):
 
-
+    labels = np.unique(I).tolist()
+    Denoised_I = np.zeros_like(I)
     ### 1) Define Graph
-    g = maxflow.Graph[float]()
+    def getGraph(img):
+        g = maxflow.Graph[float]()
+        return g
 
     ### 2) Add pixels as nodes
+    def getNodes(img, g):
+        x = img.shape[0]
+        y = img.shape[1]
+        nodes = g.add_nodes(x*y)
+        return nodes
 
     ### 3) Compute Unary cost
+    def getUnaryCost(a,b):
+        if(a==b):
+            p = rho
+        else :
+            p = 1-rho         
+        u = - np.log(p)
+        return u
 
     ### 4) Add terminal edges
+    def addTedges(g,  nodes, a, img):
+        row =img.shape[0]
+        col = img.shape[1]
+
+        for i in range(row):
+            for j in range(col):
+                weight = getUnaryCost(img[i][j], a)
+                if img[i][j] == a:                    
+                    g.add_tedge(nodes[i*col + j], weight, float("inf"))
+                else:
+                    g.add_tedge(nodes[i*col + j], weight, 0.1)                
+        return g
+    
 
     ### 5) Add Node edges
+    def addEdges(g, nodes, a, img): # need row/col because nodes is 1D
+        g1 =addTedges(g,  nodes, a, img)
+        g2 = addVEdges(g1,  nodes, a, img)
+        g3 = addHEdges(g2,  nodes, a, img)
+        return g3
     ### Vertical Edges
+    def addVEdges(g,  nodes, a, img):
+        row =img.shape[0]
+        col = img.shape[1]
+
+        for j in range(col):
+            for i in range(row-1):
+                P = pairwise_cost_same
+                g.add_edge(nodes[i*col + j], nodes[(i+1)*col + j ], P, P)
+        return g
 
     ### Horizontal edges
+    def addHEdges(g,  nodes, a, img):
+        row =img.shape[0]
+        col = img.shape[1]
+
+        for i in range(row):
+            for j in range(col-1):
+                P = pairwise_cost_diff
+                g.add_edge(nodes[i*col + j], nodes[i*col + j + 1], P, P)
+        return g
     # (Keep in mind the stucture of neighbourhood and set the weights according to the pairwise potential)
 
-
+    def updateImg(g, img, nodes, a):
+        newImg = img.copy()
+        row =img.shape[0]
+        col = img.shape[1]
+        for i in range(row):
+            for j in range(col):
+                if g.get_segment(nodes[i*col+j]) == 1:
+                    newImg[i][j] = a
+        return newImg
 
     ### 6) Maxflow
-    g.maxflow()
+    img = I
+    flows = [0,0,0]
+    temp = [0,0,0]
 
-    cv2.imshow('Original Img', I), \
-    cv2.imshow('Denoised Img', Denoised_I), cv2.waitKey(0), cv2.destroyAllWindows()
+    while True:
+        for i in range(len(labels)):
+            g = getGraph(img)
+            nodes = getNodes(img, g)
+            g = addEdges(g, nodes, labels[i], img)
+            flows[i] = g.maxflow()
+            img = updateImg(g, img, nodes, labels[i])
+            
+        if flows == temp:
+            break
+        else: # yes, idk how to do deep copy :)
+            temp[0] = flows[0]
+            temp[1] = flows[1]
+            temp[2] = flows[2]
+
+
+    Denoised_I = img
+    
+    cv2.imwrite('question3' + str(pairwise_cost_diff) + '.png', I),
+    cv2.imwrite('Question3 ' + str(pairwise_cost_diff) + '_DI.png', Denoised_I)
     return
 
 def question_4(I,rho=0.6):
@@ -124,8 +203,8 @@ def question_4(I,rho=0.6):
 
 
     Denoised_I = img
-    cv2.imshow('Original Img', I), \
-    cv2.imshow('Denoised Img', Denoised_I), cv2.waitKey(0), cv2.destroyAllWindows()
+    cv2.imwrite('Original Img.png', I)
+    cv2.imwrite('Denoised Img.png', Denoised_I)
 
     return
 
