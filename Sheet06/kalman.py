@@ -17,18 +17,60 @@ class KalmanFilter(object):
         self.state = None
         self.convariance = None
         self.tau = tau
+        self.wt = (tau)+psi.shape[0]
+        for i,j in range(psi.shape[0],psi.shape[1]):
+            self.psi[i][j] = self.psi[i][j]*tau
+                               
+        
+        #self.xt= 
+        self.psi_t = np.transpose(psi)
+        self.phi_t = np.transpose(phi)
+        
+        
 
     def init(self, init_state):
-        # self.state =
-        # self.covariance =
+        self.state = init_state        
+        self.convariance = np.identity(self.wt)
+        #print(self.convariance)
         pass
 
     def track(self, xt):
         # to do
+        #print(self.convariance.shape)
+        #print(self.psi.shape)
+        sigma_plus = self.sigma_p + np.dot( np.dot(self.sigma_p,self.convariance[0:4,0:4]), self.psi_t)
+        #print(sigma_plus)
+        #print(sigma_plus.shape)
+        #print(self.phi.shape)
+        kalman = np.dot(np.dot(sigma_plus, self.phi_t),\
+                        np.linalg.inv(self.sigma_m + \
+                         np.dot(np.dot(self.phi, sigma_plus), self.phi_t)))
+        #print("-------------------------")
+        #print(kalman)
+        mean_plus = np.dot (self.psi, self.state)
+        #print("xt----------", xt)
+        #mean_t = xt - np.dot(self.phi, mean_plus)
+        #print("mean_p-----",mean_plus)
+       # print(mean_t.shape)
+        #mean_plus = mean_plus + np.dot(self.psi, mean_t)
+        #print("mean_plus-----",mean_plus)
+        #measurement incorporation
+        mean_t = mean_plus + np.dot(kalman, (xt - np.dot(self.phi, mean_plus)))
+        #print(mean_t)
+        #print(sigma_plus.shape)
+        #print(self.phi.shape)
+        #print(kalman.shape)
+        new = np.identity(self.wt)
+        sigma_t = np.dot(new[0:4,0:4]- np.dot(kalman[0:4,0:4], self.phi), sigma_plus)
+        #print(sigma_t)
+        self.convariance  = sigma_t
+        self.state = mean_t
+        
         pass
 
     def get_current_location(self):
         # to do
+        return self.state
         pass
 
 def perform_tracking(tracker):
