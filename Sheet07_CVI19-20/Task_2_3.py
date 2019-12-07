@@ -19,30 +19,42 @@ def task_2():
    #print(x_mean)
    X = x[:] - x_mean
    #print(X)
-   XXT =  X @ np.transpose(X) 
+   XXT =  np.transpose(X) @ X
+   print(XXT.shape)
    #print(XXT)
    u, e, v = np.linalg.svd(XXT)
-   print(e)
+   print(u.shape)
+   #print(e)
    #e.sort()
    eCollection = 0
-   k = 1
+   N = 1
    for i in range (len(e)):
        eCollection += e[i]
        minimum_energy = eCollection / e.sum()
        if (minimum_energy > 0.9):
-           k = i
+           N = i
            break
-   print("k------------",k)
+  # print("N------------",N)
    #print(u.shape)
-   l2jj = e[k:].sum() 
-   sigma_sq = l2jj / (e.shape[0] - k)   
-   uk =  u[:, :k]
-   l2k = e[:k]
-   print(sigma_sq)
-   print(l2k)
+   l2jj = e[N:].sum() 
+   sigma_sq = l2jj / (e.shape[0] - N)   
+   uk =  u[:,:N]
+   l2k = e[:N]
+  # print(sigma_sq)
+  # print(l2k)
+   #print(uk.shape)
    phi = uk * np.sqrt(l2k-sigma_sq)
-   print (phi)
-   return x_mean, phi
+   #print(x_mean)
+   #print (phi)
+   hi = np.array([-0.4,-0.2,0.0,0.2,0.4])
+   #print(x_mean.shape)
+   #print(phi.shape)
+   wi = x_mean + (phi * hi.reshape(1,N)).sum(axis=1)
+   fig = plt.figure()
+   ax = fig.add_subplot()
+   wi = np.transpose(wi.reshape(wi.shape[0] // 2, 2, order='F'))
+   ax.plot(wi[0,:],wi[1,:])
+   plt.show()
 
 def task_3():
     pass
