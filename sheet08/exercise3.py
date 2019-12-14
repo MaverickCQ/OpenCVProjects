@@ -3,6 +3,10 @@ import numpy as np
 import matplotlib.pylab as plt
 from sklearn.neighbors import NearestNeighbors
 
+def showImg(img, name="Image"):
+    cv.imshow(name,img) 
+    cv.waitKey(0) 
+    cv.destroyAllWindows()
 
 def main():
     # Load the images
@@ -18,31 +22,33 @@ def main():
     print(descriptors1.shape)
     keypoints2 , descriptors2 = sift.detectAndCompute(img2, None)
     
-    #print(len(keypoints1))
-    # your own implementation of matching
-    neigh = NearestNeighbors(n_neighbors=2)
-    neigh.fit(descriptors1)
-    #k = neigh.kneighbors(descriptors2)
-    #print(k[0].shape)
-    points = []
-    for i in range(len(keypoints1)) :
-        dis, index = neigh.kneighbors(descriptors2, 2, return_distance=True)
-        #print(dis, index)
-        ratio = dis[0][0] / dis[0][1]
-        #print(ratio)
-        if (ratio<0.4) :
-          match = cv.DMatch(i,index[0][0], dis[0][0])
-          points.append(match)
-    
-    #print(points)
-    points = sorted(points, key = lambda x:x.distance)
-    img3 = cv.drawMatches(img1, keypoints1, img2, keypoints2, points[:50], img2, flags=2)
-    plt.imshow(cv.cvtColor(img3, cv.COLOR_BGR2RGB))
-    cv.imwrite("data/exercise3/mountain3.png",img3)
-    plt.show()
-    # display the matches
 
-    pass
+    KPImg_1=cv.drawKeypoints(img1.copy(),keypoints1,img1.copy())
+    KPImg_2=cv.drawKeypoints(img2.copy(),keypoints2,img2.copy())
+    
+    cv.imwrite("data/exercise3/keyPoints_1.png", KPImg_1)
+    cv.imwrite("data/exercise3/keyPoints_2.png", KPImg_2)
+    
+    # your own implementation of matching
+    neigh = NearestNeighbors(2, 0.4)
+    neigh.fit(descriptors2)   
+
+    newImg = img1.copy()
+    draw_params = dict(matchColor = (0,255,0))
+    matches = []
+    for i in range(len(keypoints1)):
+        distance, index = neigh.kneighbors([descriptors1[i]], 2, return_distance=True)
+        ratio = distance[0][0] / distance[0][1]
+        # accept the first match
+        if ratio < 0.4:
+            match = cv.DMatch(i, index[0][0], distance[0][0])
+            matches.append(match)            
+
+    # display the matches
+    newImg = cv.drawMatches(newImg,keypoints1,img2,keypoints2,matches, None, **draw_params)
+    #showImg(newImg)
+    cv.imwrite("data/exercise3/mountainMatches.png", newImg)
+    
 
 
 if __name__ == '__main__':
