@@ -28,8 +28,8 @@ def main():
     
     cv.imwrite("data/exercise3/keyPoints_1.png", KPImg_1)
     cv.imwrite("data/exercise3/keyPoints_2.png", KPImg_2)
+    
     # your own implementation of matching
-    """print(descriptors2)"""
     neigh = NearestNeighbors(2, 0.4)
     neigh.fit(descriptors2)   
 
@@ -43,13 +43,9 @@ def main():
         if ratio < 0.4:
             match = cv.DMatch(i, index[0][0], distance[0][0])
             matches.append(match)
-            print(i)
             
 
-        """print(ratio)"""
-
     # display the matches
-    """showImg(newImg)"""
     newImg = cv.drawMatches(newImg,keypoints1,img2,keypoints2,matches, None, **draw_params)
     showImg(newImg)
     cv.imwrite("data/exercise3/mountainMatches.png", newImg)
