@@ -45,7 +45,7 @@ def main():
             matches.append(match)            
 
     # display the matches
-    newImg = cv.drawMatches(newImg,keypoints1,img2,keypoints2,matches, None, **draw_params)
+    newImg = cv.drawMatches(newImg,keypoints1,img2,keypoints2,matches, img2, flags=2)
     #showImg(newImg)
     cv.imwrite("data/exercise3/mountainMatches.png", newImg)
     
