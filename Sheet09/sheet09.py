@@ -187,7 +187,7 @@ if __name__ == "__main__":
     ]
 
     Op = OpticalFlow()
-    
+    j =0 
     for (i, (frame_filename, gt_filemane)) in enumerate(zip(data_list, gt_list)):
         groundtruth_flow = load_FLO_file(gt_filemane)
         img = cv.cvtColor(cv.imread(frame_filename), cv.COLOR_BGR2GRAY)
@@ -206,26 +206,28 @@ if __name__ == "__main__":
 
         #flow_bgr_gt = Op.flow_map_to_bgr(groundtruth_flow)
 
-        fig = plt.figure(figsize=(img.shape))
+        #fig = plt.figure(figsize=(img.shape))
     
         # Display
         #fig.add_subplot(2, 3, 1)
         #plt.imshow(flow_bgr_gt)
-        fig.add_subplot(2, 3, 2)
-        plt.imshow(flow_lucas_kanade_bgr)
-        fig.add_subplot(2, 3, 3)
-        plt.imshow(aae_lucas_kanade_per_point)
+        #fig.add_subplot(2, 3, 2)
+        #plt.imshow(flow_lucas_kanade_bgr)
+        #fig.add_subplot(2, 3, 3)
+        #plt.imshow(aae_lucas_kanade_per_point)
         #fig.add_subplot(2, 3, 4)
         #plt.imshow(flow_bgr_gt)
         #fig.add_subplot(2, 3, 5)
         #plt.imshow(flow_horn_schunck_bgr)
         #fig.add_subplot(2, 3, 6)
-       #plt.imshow(aae_horn_schunk_per_point)
+        #plt.imshow(aae_horn_schunk_per_point)
         #plt.show()
         
         # Just for testing
-        """U = flow_lucas_kanade[0]
-        V = flow_lucas_kanade[1]
+        #print(flow_lucas_kanade.shape)
+        #print(flow_horn_schunck)
+        U = flow_lucas_kanade[:,:,0]
+        V = flow_lucas_kanade[:,:,1]
         A = U.copy()
         for i in range(img.shape[0]):
             for j in range(img.shape[1]):
@@ -236,7 +238,7 @@ if __name__ == "__main__":
         for i in range(img.shape[0]):
             for j in range(img.shape[1]):
                 img[i][j] = int(255 * (A[i][j]-mi)/(ma-mi) )
-        showImg(img)"""
+        showImg(img, "Lucas_"+str(j)+".png")
         
         U = flow_horn_schunck[0]
         V = flow_horn_schunck[1]
@@ -250,6 +252,7 @@ if __name__ == "__main__":
         for i in range(img.shape[0]):
             for j in range(img.shape[1]):
                 img[i][j] = int(255 * (A[i][j]-mi)/(ma-mi) )
-        showImg(img)
+        showImg(img, "horn_schunck"+str(j)+".png")
+        j +=1
         
         print("*"*20)
