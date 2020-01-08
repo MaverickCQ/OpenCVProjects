@@ -51,12 +51,16 @@ def task1():
         else:
             print('Chessboard not detected in image ')
 
-        #showImg(img, img_file)
+        showImg(img, img_file)
     return imagePoints, objectPoints
 
 def task2(imagePoints, objectPoints):
     #implement your solution
-    pass
+    img = cv2.imread(images_files_list[0])
+    img_size = (img.shape[0], img.shape[1])
+    ret, CM, D, rvecs, tvecs = cv2.calibrateCamera(objectPoints, imagePoints, img_size, None, None)
+    
+    return CM, D, rvecs, tvecs
 
 def task3(imagePoints, objectPoints, CM, D, rvecs, tvecs):
     #implement your solution
@@ -79,9 +83,8 @@ def main():
         cv2.waitKey(10)"""
     
     imagePoints, objectPoints = task1() #Calling Task 1
-    print(objectPoints)
-    
-    #CM, D, rvecs, tvecs = task2(imagePoints, objectPoints) #Calling Task 2
+        
+    CM, D, rvecs, tvecs = task2(imagePoints, objectPoints) #Calling Task 2
 
     #task3(imagePoints, objectPoints, CM, D, rvecs, tvecs)  # Calling Task 3
 
