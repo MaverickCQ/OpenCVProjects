@@ -37,19 +37,19 @@ def task1():
     for img_file in images_files_list:
         print(img_file)
         img = cv2.imread(img_file)
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
         # Find the chessboard corners
-        ret, corners = cv2.findChessboardCorners(gray, board_size, None)
+        ret, corners = cv2.findChessboardCorners(img_gray, board_size, None)
 
         if ret == True:
             # Refining corners position with sub-pixels based algorithm
-            cv2.cornerSubPix(gray, corners, (3, 3), (-1, -1), subpix_criteria)
+            cv2.cornerSubPix(img_gray, corners, (3, 3), (-1, -1), subpix_criteria)
             cv2.drawChessboardCorners(img, board_size, corners, ret)
             imagePoints.append(corners)
             objectPoints.append(objp)            
         else:
-            print('Chessboard not detected in image ')
+            print('No chessboard')
 
         showImg(img, img_file)
     return imagePoints, objectPoints
@@ -86,7 +86,7 @@ def main():
         
     CM, D, rvecs, tvecs = task2(imagePoints, objectPoints) #Calling Task 2
 
-    #task3(imagePoints, objectPoints, CM, D, rvecs, tvecs)  # Calling Task 3
+    task3(imagePoints, objectPoints, CM, D, rvecs, tvecs)  # Calling Task 3
 
     #task4(CM, D) # Calling Task 4
 
