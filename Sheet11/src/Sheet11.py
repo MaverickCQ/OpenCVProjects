@@ -12,13 +12,90 @@ def drawEpipolar(im1,im2,corr1,corr2,fundMat):
 def display_correspondences(im1,im2,corr1,corr2):
 
     ## Insert correspondences
-    print("Display correspondences")
-    cv2.imshow('Image 1', im1), \
-    cv2.imshow('Image 2', im2), cv2.waitKey(0), cv2.destroyAllWindows()
-    return
+    img1 = im1.copy()
+    img2 = im2.copy()
 
+    for i in range(len(corr1)):
+        x1 = int(corr1[i][0])
+        y1 = int(corr1[i][1])
+        x2 = int(corr2[i][0])
+        y2 = int(corr2[i][1])
+
+        cv2.circle(img1, (x1,y1), 3, (0,0,255), -1)
+        cv2.circle(img2, (x2,y2), 3, (0,0,255), -1)
+    print("Display correspondences")
+    cv2.imshow('Image 1', img1), \
+    cv2.imshow('Image 2', img2), cv2.waitKey(0), cv2.destroyAllWindows()
+    return
+    
 def computeFundMat(im1,im2,corr1,corr2):
     fundMat = np.zeros((3,3))
+
+    # Normalize corr1 
+    x1 = np.zeros((corr1.shape[0],corr1.shape[1]+1))# Pad 1 ==> homogenious
+    for i in range(len(corr1)):
+        x1[i] = np.append(corr1[i],[[1]])
+    
+    mean = np.mean(x1[:2], axis=1)# Compute the mean because later we would move the centroid to origin
+    
+    sum = 0# Calculate the average distance from origin
+    for i in range(len(x1)):
+        sum += np.sqrt(x1[i][0]*x1[i][0] + x1[i][1]*x1[i][1])
+    sum = sum/len(x1)    
+    
+    S1 = np.sqrt(2) / sum# Scale the point so the average distance from the origin is equal to sqrt(2)
+    T1 = np.array([# Translate so that the origin is on the origin
+        [S1, 0, -S1 * mean[0]],
+        [0, S1, -S1 * mean[1]],
+        [0, 0, 1]
+    ])
+
+    x1 = np.dot(T1, x1.T)
+    
+    # Normalize corr2    
+    x2 = np.zeros((corr2.shape[0],corr2.shape[1]+1))# Pad 1 ==> homogenious
+    for i in range(len(corr2)):
+        x2[i] = np.append(corr2[i],[[1]])
+    
+    mean = np.mean(x2[:2], axis=1)# Compute the mean because later we would move the centroid to origin
+    
+    sum = 0# Calculate the average distance from origin
+    for i in range(len(x2)):
+        sum += np.sqrt(x2[i][0]*x2[i][0] + x2[i][1]*x2[i][1])
+    sum = sum/len(x2)    
+    
+    S2 = np.sqrt(2) / sum# Scale the point so the average distance from the origin is equal to sqrt(2)
+    T2 = np.array([# Translate so that the origin is on the origin
+        [S2, 0, -S2 * mean[0]],
+        [0, S2, -S2 * mean[1]],
+        [0, 0, 1]
+    ])
+
+    x2 = np.dot(T2, x2.T)
+
+
+    n = x2.shape[1] # number of the points, it should be the same for x1 and x2   
+    # Compute Fundamental matrix
+    # build matrix for equations
+    A = np.zeros((n,9))
+    for i in range(n):
+        A[i] = [x1[0,i]*x2[0,i], x1[0,i]*x2[1,i], x1[0,i]*x2[2,i],
+                x1[1,i]*x2[0,i], x1[1,i]*x2[1,i], x1[1,i]*x2[2,i],
+                x1[2,i]*x2[0,i], x1[2,i]*x2[1,i], x1[2,i]*x2[2,i] ]
+            
+    # compute linear least square solution
+    U,S,V = np.linalg.svd(A)
+    fundMat = V[-1].reshape(3,3)
+        
+    # constrain fundMat
+    # make rank 2 by zeroing out last singular value
+    U,S,V = np.linalg.svd(fundMat)
+    S[2] = 0
+    fundMat = np.dot(U,np.dot(np.diag(S),V))
+
+    # reverse normalization
+    fundMat = np.dot(T1.T,np.dot(fundMat,T2))
+    
 
     return fundMat
 
@@ -28,10 +105,13 @@ def question_q1_q2(im1,im2,correspondences):
     corr1 = correspondences[:, :2]
     corr2 = correspondences[:, 2:]
 
+    #print(corr1)
+
     print("Compute Fundamental Matrix")
     fundMat = computeFundMat(im1.copy(),im2.copy(),corr1,corr2)
+    print(fundMat)
     display_correspondences(im1.copy(),im2.copy(),corr1,corr2)
-    drawEpipolar(im1.copy(),im2.copy(),corr1,corr2,fundMat)
+    #drawEpipolar(im1.copy(),im2.copy(),corr1,corr2,fundMat)
     return
 
 
@@ -73,8 +153,8 @@ def main():
     aloe2 = cv2.imread('../images/aloe2.png')
     correspondences = np.genfromtxt('../images/corresp.txt', dtype=float, skip_header=1)
     question_q1_q2(apt1,apt2,correspondences)
-    question_q3(aloe1,aloe2)
-    question_q4(apt1,apt2,correspondences)
+    #question_q3(aloe1,aloe2)
+    #question_q4(apt1,apt2,correspondences)
 
 if __name__ == '__main__':
     main()
