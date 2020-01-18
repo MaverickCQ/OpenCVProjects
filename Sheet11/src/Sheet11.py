@@ -9,8 +9,8 @@ def drawEpipolar(im1,im2,corr1,corr2,fundMat):
     line = np.dot(fundMat, x1.T).T
     
     for i in range(len(line)):
-        cv2.line(im2, (int(-line[i][2]/line[i][0]),20), (0,int(-line[i][2]/line[i][1])+20), (0,0,255),2)
-        cv2.circle(im1, (int(corr1[i][0]),int(corr1[i][1])), 3, (0,0,255), -1)
+        cv2.line(im1, (int(-line[i][2]/line[i][0]),20), (0,int(-line[i][2]/line[i][1])+20), (0,0,255),2)
+        cv2.circle(im2, (int(corr2[i][0]),int(corr2[i][1])), 3, (0,0,255), -1)
         
     ## Insert epipolar lines
     print("Drawing epipolar lines")
@@ -46,14 +46,22 @@ def computeFundMat(im1,im2,corr1,corr2):
         x1[i] = np.append(corr1[i],[[1]])
     
     mean = np.mean(x1[:2], axis=1)# Compute the mean because later we would move the centroid to origin
+
+    for i in range(len(x1)):# Translate so that the origin is on the origin
+        x1[i][0] = x1[i][0] - mean[0]
+        x1[i][1] = x1[i][1] - mean[1]
     
     sum = 0# Calculate the average distance from origin
     for i in range(len(x1)):
         sum += np.sqrt(x1[i][0]*x1[i][0] + x1[i][1]*x1[i][1])
-    sum = sum/len(x1)    
+    sum = sum/len(x1)   
+
+    for i in range(len(x1)):# Translate so that the origin is on the origin
+        x1[i][0] = x1[i][0] + mean[0]
+        x1[i][1] = x1[i][1] + mean[1] 
     
     S1 = np.sqrt(2) / sum# Scale the point so the average distance from the origin is equal to sqrt(2)
-    T1 = np.array([# Translate so that the origin is on the origin
+    T1 = np.array([
         [S1, 0, -S1 * mean[0]],
         [0, S1, -S1 * mean[1]],
         [0, 0, 1]
@@ -67,14 +75,22 @@ def computeFundMat(im1,im2,corr1,corr2):
         x2[i] = np.append(corr2[i],[[1]])
     
     mean = np.mean(x2[:2], axis=1)# Compute the mean because later we would move the centroid to origin
+
+    for i in range(len(x2)):# Translate so that the origin is on the origin
+        x2[i][0] = x2[i][0] - mean[0]
+        x2[i][1] = x2[i][1] - mean[1]
     
     sum = 0# Calculate the average distance from origin
     for i in range(len(x2)):
         sum += np.sqrt(x2[i][0]*x2[i][0] + x2[i][1]*x2[i][1])
     sum = sum/len(x2)    
+
+    for i in range(len(x2)):# Translate so that the origin is on the origin
+        x2[i][0] = x2[i][0] + mean[0]
+        x2[i][1] = x2[i][1] + mean[1]
     
     S2 = np.sqrt(2) / sum# Scale the point so the average distance from the origin is equal to sqrt(2)
-    T2 = np.array([# Translate so that the origin is on the origin
+    T2 = np.array([
         [S2, 0, -S2 * mean[0]],
         [0, S2, -S2 * mean[1]],
         [0, 0, 1]
@@ -119,7 +135,7 @@ def question_q1_q2(im1,im2,correspondences):
     print("Compute Fundamental Matrix")
     fundMat = computeFundMat(im1.copy(),im2.copy(),corr1,corr2)
     #print(fundMat)
-    #display_correspondences(im1.copy(),im2.copy(),corr1,corr2)
+    display_correspondences(im1.copy(),im2.copy(),corr1,corr2)
     drawEpipolar(im1.copy(),im2.copy(),corr1,corr2,fundMat)
     return
 
@@ -157,7 +173,7 @@ def question_q4(im1, im2, correspondences):
 def main():
 
     apt1 = cv2.imread('../images/apt1.jpg')
-    apt2 = cv2.imread('../images/apt1.jpg')
+    apt2 = cv2.imread('../images/apt2.jpg')
     aloe1 = cv2.imread('../images/aloe1.png')
     aloe2 = cv2.imread('../images/aloe2.png')
     correspondences = np.genfromtxt('../images/corresp.txt', dtype=float, skip_header=1)
