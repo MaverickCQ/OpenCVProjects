@@ -3,6 +3,15 @@ import numpy as np
 
 def drawEpipolar(im1,im2,corr1,corr2,fundMat):
 
+    x1 = np.zeros((corr1.shape[0],corr1.shape[1]+1))# Pad 1 ==> homogenious
+    for i in range(len(corr1)):
+        x1[i] = np.append(corr1[i],[[1]])
+    line = np.dot(fundMat, x1.T).T
+    
+    for i in range(len(line)):
+        cv2.line(im2, (int(-line[i][2]/line[i][0]),20), (0,int(-line[i][2]/line[i][1])+20), (0,0,255),2)
+        cv2.circle(im1, (int(corr1[i][0]),int(corr1[i][1])), 3, (0,0,255), -1)
+        
     ## Insert epipolar lines
     print("Drawing epipolar lines")
     cv2.imshow('Image 1', im1), \
@@ -109,9 +118,9 @@ def question_q1_q2(im1,im2,correspondences):
 
     print("Compute Fundamental Matrix")
     fundMat = computeFundMat(im1.copy(),im2.copy(),corr1,corr2)
-    print(fundMat)
-    display_correspondences(im1.copy(),im2.copy(),corr1,corr2)
-    #drawEpipolar(im1.copy(),im2.copy(),corr1,corr2,fundMat)
+    #print(fundMat)
+    #display_correspondences(im1.copy(),im2.copy(),corr1,corr2)
+    drawEpipolar(im1.copy(),im2.copy(),corr1,corr2,fundMat)
     return
 
 
