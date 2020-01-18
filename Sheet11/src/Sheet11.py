@@ -177,11 +177,11 @@ def question_q4(im1, im2, correspondences):
     ### usage of either one is permitted
     print ("Fundamental Matrix")
     #fundMat = np.asmatrix([[]]) ## Insert the given matrix
-    fundMat = computeFundMat(im1.copy(),im2.copy(),corr1,corr2)
-    
+    fundMat = computeFundMat(im1.copy(),im2.copy(),corr1,corr2)    
     ## Compute Rectification or Homography
     print("Compute Rectification")
     ## Apply Homography
+    '''
     h1, status = cv2.findHomography(corr1, corr2)
     im1 = cv2.warpPerspective(im1, h1, (im2.shape[1],im2.shape[0]))
     h2, status = cv2.findHomography(corr2, corr1)
@@ -189,7 +189,32 @@ def question_q4(im1, im2, correspondences):
     print("Display Warped Images")
     cv2.imwrite('Warped Image_1.png', im1)
     cv2.imwrite('Warped Image_2.png', im2)
-    return
+    '''
+   # origin, c1 = normalize(corr1)
+   # dest, c2 = normalize(corr2)
+    correspondences = im1.shape[1]
+    a = np.zeros((2 * correspondences, 9))
+    for i in range(correspondences):
+        a[2 * i] = [-im1[0][i], -im1[1][i], -1, 0, 0, 0, im2[0][i] * im1[0][i], im2[0][i] * im1[1][i], im2[0][i]]
+        a[2 * i + 1] = [0, 0, 0, -im1[0][i], -im1[1][i], -1, im2[1][i] * im1[0][i], im2[1][i] * im1[1][i], im2[1][i]]
+    u, s, v = np.linalg.svd(a)
+    homography_matrix = v[8].reshape((3, 3))
+    homography_matrix = np.dot(np.linalg.inv(corr2), np.dot(homography_matrix, corr1))
+    homography_matrix = homography_matrix / homography_matrix[2, 2]
+    im1 = cv2.warpPerspective(im1, homography_matrix, (im2.shape[1],im2.shape[0]))
+    print("Display Warped Images")
+    cv2.imwrite('Warped Image_1.png', im1)
+    
+   # cv2.imwrite('Warped Image_2.png', im2)
+    
+def normalize(point_list):
+    m = np.mean(point_list[:2], axis=1)
+    max_std = max(np.std(point_list[:2], axis=1)) + 1e-9
+    c = np.diag([1 / max_std, 1 / max_std, 1])
+    c[0][2] = -m[0] / max_std
+    c[1][2] = -m[1] / max_std
+    return np.dot(c, point_list), c
+    
 
 def main():
 
@@ -198,8 +223,8 @@ def main():
     aloe1 = cv2.imread('../images/aloe1.png')
     aloe2 = cv2.imread('../images/aloe2.png')
     correspondences = np.genfromtxt('../images/corresp.txt', dtype=float, skip_header=1)
-    question_q1_q2(apt1,apt2,correspondences)
-    question_q3(aloe1,aloe2)
+    #question_q1_q2(apt1,apt2,correspondences)
+    #question_q3(aloe1,aloe2)
     question_q4(apt1,apt2,correspondences)
 
 if __name__ == '__main__':
