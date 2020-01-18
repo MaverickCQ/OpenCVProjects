@@ -14,9 +14,8 @@ def drawEpipolar(im1,im2,corr1,corr2,fundMat):
         
     ## Insert epipolar lines
     print("Drawing epipolar lines")
-    cv2.imwrite('Image#1.png', im1)
-    cv2.imwrite('Image#2.png', im2) 
-    #cv2.waitKey(0), cv2.destroyAllWindows()
+    cv2.imshow('Image 1', im1), \
+    cv2.imshow('Image 2', im2), cv2.waitKey(0), cv2.destroyAllWindows()
     return
 
 def display_correspondences(im1,im2,corr1,corr2):
@@ -34,8 +33,8 @@ def display_correspondences(im1,im2,corr1,corr2):
         cv2.circle(img1, (x1,y1), 3, (0,0,255), -1)
         cv2.circle(img2, (x2,y2), 3, (0,0,255), -1)
     print("Display correspondences")
-    cv2.imwrite('Image_1.png', img1)
-    cv2.imwrite('Image_2.png', img2)
+    cv2.imshow('Image 1', img1), \
+    cv2.imshow('Image 2', img2), cv2.waitKey(0), cv2.destroyAllWindows()
     #, cv2.waitKey(0), cv2.destroyAllWindows()
     return
     
@@ -136,37 +135,54 @@ def question_q1_q2(im1,im2,correspondences):
 
     print("Compute Fundamental Matrix : ")
     fundMat = computeFundMat(im1.copy(),im2.copy(),corr1,corr2)
-    print(fundMat)
+    
     display_correspondences(im1.copy(),im2.copy(),corr1,corr2)
     drawEpipolar(im1.copy(),im2.copy(),corr1,corr2,fundMat)
     return
 
 
 def question_q3(im1, im2):
-    dispar = np.zeros_like(im1)
+    
     ## compute disparity map
-    print("Compute Disparity Map")
+    print("Compute Disparity Map (2~3 minutes)")
     #cv2.imwrite('disparity1.png', dispar)
     im1 = cv2.cvtColor(im1, cv2.COLOR_BGR2GRAY)
     im2 = cv2.cvtColor(im2, cv2.COLOR_BGR2GRAY)
-    #https://docs.opencv.org/master/d9/dba/classcv_1_1StereoBM.html    
-    stereo = cv2.StereoBM_create(numDisparities=160, blockSize=5)
-    stereo.setPreFilterCap(60)
-    stereo.setPreFilterSize(5)
-    stereo.setPreFilterType(1)
-    stereo.setSmallerBlockSize(5)
-    stereo.setTextureThreshold(520)
-    stereo.setUniquenessRatio(0)
-    stereo.setSpeckleWindowSize(0)    
-    #dispar = cv2.StereoSGBM(im1, im2, dispar, stereo)
-    dispar = stereo.compute(im1, im2, dispar)
-    dispar = cv2.normalize(dispar, dispar, beta=0, alpha=255, norm_type=cv2.NORM_MINMAX)
-    dispar  = np.uint8(dispar)    
-    print(dispar)    
+    dispar = np.zeros_like(im1)
+
+    R = im1.shape[0]
+    C = im1.shape[1]
+
+    # match every 7x7 patch from im2 to im1, so we can get the position of same template in two pics
+    for i in range(3, im1.shape[0]-3):
+        for j in range(3, im1.shape[1]-3): 
+            # since its too time consuming, i sampling here
+            if i%3==0 and j%3==0:
+                temp = im2[i-3:i+3, j-3:j+3]
+                result = cv2.matchTemplate(im1,temp, cv2.TM_SQDIFF)
+                minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(result)
+                topLeft = minLoc
+                # Disparity = X1 - X2
+                dispar[i][j] = abs(abs(R/2 - (topLeft[0]+3)) - abs(R/2 - j))
+            else:
+                dispar[i][j] = dispar[i//3*3][j//3*3]
+
+    # convert Disparity above to 0~255
+    maxVal = np.amax(dispar)
+    minVal = np.amin(dispar)
+    for i in range(dispar.shape[0]):
+        for j in range(dispar.shape[1]):
+            dispar[i][j] = 255 * (dispar[i][j]-minVal) / (maxVal - minVal)
+   
+    """cv2.imshow("img",dispar)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()"""
+    
+    
     ## Display disparity Map
-    cv2.imwrite('Image1.png', im1)
-    cv2.imwrite('Image2.png', im2)
-    cv2.imwrite('Disparity_Map.png', dispar)
+    cv2.imshow('Image 1', im1), \
+    cv2.imshow('Image 2', im2), \
+    cv2.imshow('Disparity Map', dispar), cv2.waitKey(0), cv2.destroyAllWindows()
     return
 
 def question_q4(im1, im2, correspondences):
