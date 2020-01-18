@@ -182,10 +182,13 @@ def question_q4(im1, im2, correspondences):
     ## Compute Rectification or Homography
     print("Compute Rectification")
     ## Apply Homography
-
+    h1, status = cv2.findHomography(corr1, corr2)
+    im1 = cv2.warpPerspective(im1, h1, (im2.shape[1],im2.shape[0]))
+    h2, status = cv2.findHomography(corr2, corr1)
+    im2 = cv2.warpPerspective(im2, h2, (im1.shape[1],im1.shape[0]))    
     print("Display Warped Images")
-    cv2.imshow('Warped Image 1', im1), \
-    cv2.imshow('Warped Image 2', im2), cv2.waitKey(0), cv2.destroyAllWindows()
+    cv2.imwrite('Warped Image_1.png', im1)
+    cv2.imwrite('Warped Image_2.png', im2)
     return
 
 def main():
@@ -195,9 +198,9 @@ def main():
     aloe1 = cv2.imread('../images/aloe1.png')
     aloe2 = cv2.imread('../images/aloe2.png')
     correspondences = np.genfromtxt('../images/corresp.txt', dtype=float, skip_header=1)
-    #question_q1_q2(apt1,apt2,correspondences)
+    question_q1_q2(apt1,apt2,correspondences)
     question_q3(aloe1,aloe2)
-    #question_q4(apt1,apt2,correspondences)
+    question_q4(apt1,apt2,correspondences)
 
 if __name__ == '__main__':
     main()
