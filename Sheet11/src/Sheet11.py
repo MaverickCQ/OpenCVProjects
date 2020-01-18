@@ -14,8 +14,9 @@ def drawEpipolar(im1,im2,corr1,corr2,fundMat):
         
     ## Insert epipolar lines
     print("Drawing epipolar lines")
-    cv2.imshow('Image 1', im1), \
-    cv2.imshow('Image 2', im2), cv2.waitKey(0), cv2.destroyAllWindows()
+    cv2.imwrite('Image#1.png', im1)
+    cv2.imwrite('Image#2.png', im2) 
+    #cv2.waitKey(0), cv2.destroyAllWindows()
     return
 
 def display_correspondences(im1,im2,corr1,corr2):
@@ -33,8 +34,9 @@ def display_correspondences(im1,im2,corr1,corr2):
         cv2.circle(img1, (x1,y1), 3, (0,0,255), -1)
         cv2.circle(img2, (x2,y2), 3, (0,0,255), -1)
     print("Display correspondences")
-    cv2.imshow('Image 1', img1), \
-    cv2.imshow('Image 2', img2), cv2.waitKey(0), cv2.destroyAllWindows()
+    cv2.imwrite('Image_1.png', img1)
+    cv2.imwrite('Image_2.png', img2)
+    #, cv2.waitKey(0), cv2.destroyAllWindows()
     return
     
 def computeFundMat(im1,im2,corr1,corr2):
@@ -116,10 +118,10 @@ def question_q1_q2(im1,im2,correspondences):
 
     #print(corr1)
 
-    print("Compute Fundamental Matrix")
+    print("Compute Fundamental Matrix : ")
     fundMat = computeFundMat(im1.copy(),im2.copy(),corr1,corr2)
-    #print(fundMat)
-    #display_correspondences(im1.copy(),im2.copy(),corr1,corr2)
+    print(fundMat)
+    display_correspondences(im1.copy(),im2.copy(),corr1,corr2)
     drawEpipolar(im1.copy(),im2.copy(),corr1,corr2,fundMat)
     return
 
@@ -128,11 +130,27 @@ def question_q3(im1, im2):
     dispar = np.zeros_like(im1)
     ## compute disparity map
     print("Compute Disparity Map")
-
+    #cv2.imwrite('disparity1.png', dispar)
+    im1 = cv2.cvtColor(im1, cv2.COLOR_BGR2GRAY)
+    im2 = cv2.cvtColor(im2, cv2.COLOR_BGR2GRAY)
+    #https://docs.opencv.org/master/d9/dba/classcv_1_1StereoBM.html    
+    stereo = cv2.StereoBM_create(numDisparities=160, blockSize=5)
+    stereo.setPreFilterCap(60)
+    stereo.setPreFilterSize(5)
+    stereo.setPreFilterType(1)
+    stereo.setSmallerBlockSize(5)
+    stereo.setTextureThreshold(520)
+    stereo.setUniquenessRatio(0)
+    stereo.setSpeckleWindowSize(0)    
+    #dispar = cv2.StereoSGBM(im1, im2, dispar, stereo)
+    dispar = stereo.compute(im1, im2, dispar)
+    dispar = cv2.normalize(dispar, dispar, beta=0, alpha=255, norm_type=cv2.NORM_MINMAX)
+    dispar  = np.uint8(dispar)    
+    print(dispar)    
     ## Display disparity Map
-    cv2.imshow('Image 1', im1), \
-    cv2.imshow('Image 2', im2), \
-    cv2.imshow('Disparity Map', dispar), cv2.waitKey(0), cv2.destroyAllWindows()
+    cv2.imwrite('Image1.png', im1)
+    cv2.imwrite('Image2.png', im2)
+    cv2.imwrite('Disparity_Map.png', dispar)
     return
 
 def question_q4(im1, im2, correspondences):
@@ -142,9 +160,9 @@ def question_q4(im1, im2, correspondences):
 
     ### usage of either one is permitted
     print ("Fundamental Matrix")
-    fundMat = np.asmatrix([[]]) ## Insert the given matrix
+    #fundMat = np.asmatrix([[]]) ## Insert the given matrix
     fundMat = computeFundMat(im1.copy(),im2.copy(),corr1,corr2)
-
+    
     ## Compute Rectification or Homography
     print("Compute Rectification")
     ## Apply Homography
@@ -161,8 +179,8 @@ def main():
     aloe1 = cv2.imread('../images/aloe1.png')
     aloe2 = cv2.imread('../images/aloe2.png')
     correspondences = np.genfromtxt('../images/corresp.txt', dtype=float, skip_header=1)
-    question_q1_q2(apt1,apt2,correspondences)
-    #question_q3(aloe1,aloe2)
+    #question_q1_q2(apt1,apt2,correspondences)
+    question_q3(aloe1,aloe2)
     #question_q4(apt1,apt2,correspondences)
 
 if __name__ == '__main__':
