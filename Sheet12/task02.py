@@ -49,18 +49,33 @@ def computeShape(x):
     motion = np.dot(U[:,:3],D_sqrt)
     # D^(0.5) dot Vt(3xn)
     S = np.dot(D_sqrt, Vt[:3,:])
-
-
-
-    return motion, S
+    F = x.shape[0]
+    #Wc= []
+    c= np.ones((F,F))
+    h = U*c
+    print(h.shape)
+    new_y = np.zeros(6)
+    for i in range (0,2     ) :
+        new_y[i] = h[i,:]/sigma[i,i]
+    l = Vt*new_y
+    L = np.array([[l[0],l[1],l[2]],
+                  [l[3],l[4],l[5]],
+                  [l[6],l[7],l[8]]])
+    C = np.linalg.cholesky(L)
+    
+    motion_prime = motion * C
+    S_prime = np.linalg.inv(C) * S    
+    
+    return motion_prime, S_prime
 
 
 def task2():
-    data_matrix = np.genfromtxt('./data/data_matrix.txt', dtype=float, skip_header=0)
-    
+    data_matrix = np.genfromtxt('./data/data_matrix.txt', dtype=float, skip_header=0)    
     # (3xn)
     motion, S = computeShape(data_matrix.copy())
-
+    
+    
+    
 
     # plot
     fig = plt.figure(figsize=(10, 10))
