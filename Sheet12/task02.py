@@ -51,11 +51,11 @@ def computeShape(x):
     S = np.dot(D_sqrt, Vt[:3,:])
     F = x.shape[0]
     #Wc= []
-    c= np.ones((F,F))
-    h = U*c
+    c= np.ones((2*F,F))
+    h = np.transpose(U)*c
     print(h.shape)
     new_y = np.zeros(6)
-    for i in range (0,2     ) :
+    for i in range (0,2) :
         new_y[i] = h[i,:]/sigma[i,i]
     l = Vt*new_y
     L = np.array([[l[0],l[1],l[2]],
